@@ -23,70 +23,71 @@ import java.util.stream.Stream;
  */
 public class UnionFind {
     public static void main(String[] args) {
-        String equalsRelationshipFile = args[0];
-        String unequalsRelationshipFile = args[1];
+        //TODO obviously more input validation is required
+        String equalsRelationshipFile = args[0]; //input file containing the "=" relationships
+        String unequalsRelationshipFile = args[1]; //input file containing the "!=" relationships
 
-        final Map<String, Node> input = new HashMap<>();
-        try (Stream<String> stream = Files.lines(Paths.get(equalsRelationshipFile))) {
+        final Map<String, Node> input = new HashMap<>(); //map containing all of the nodes
+        try (Stream<String> stream = Files.lines(Paths.get(equalsRelationshipFile))) { //parse "=" relationships
             stream.forEach(line -> {
                 String[] tokens = line.split("=");
                 Node x = null;
                 Node y = null;
-                if (input.get(tokens[0]) == null) {
+                if (input.get(tokens[0]) == null) { // if not present yet, create node via makeSet
                     x = makeSet(tokens[0]);
                 } else {
-                    x = input.get(tokens[0]);
+                    x = input.get(tokens[0]); // else fetch it from our map
                 }
 
-                if (input.get(tokens[1]) == null) {
+                if (input.get(tokens[1]) == null) { // same as with x
                     y = makeSet(tokens[1]);
                 } else {
                     y = input.get(tokens[1]);
                 }
 
-                union(x, y);
+                union(x, y); // merge the two sets
 
-                input.put(x.getValue(), x);
-                input.put(y.getValue(), y);
+                input.put(x.getValue(), x); //update x
+                input.put(y.getValue(), y); //update y
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO this can be handled better
         }
 
         final AtomicBoolean validity = new AtomicBoolean(true);
-        try (Stream<String> stream = Files.lines(Paths.get(unequalsRelationshipFile))) {
+        try (Stream<String> stream = Files.lines(Paths.get(unequalsRelationshipFile))) { // parse "!=" relationships file
             stream.forEach(line -> {
                 String[] tokens = line.split("!=");
-                Node x = input.get(tokens[0]);
-                Node y = input.get(tokens[1]);
+                Node x = input.get(tokens[0]); //TODO return invalid on NPE
+                Node y = input.get(tokens[1]); //TODO return invalid on NPE
 
-                Node xRep = getRepresentative(x);
-                Node yRep = getRepresentative(y);
+                Node xRep = getRepresentative(x); // get x's rep
+                Node yRep = getRepresentative(y); // get y's rep
 
-                if (xRep.equals(yRep)) {
+                if (xRep.equals(yRep)) { //if the reps match, then obviously the != relationship between x and y is not valid
                     validity.set(false);
                 }
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO must handle this better
         }
 
-        if (validity.get()) {
+        if (validity.get()) { //print result
             System.out.println("valid");
         } else {
             System.out.println("invalid");
         }
     }
 
-    private static Node makeSet(String x) {
+    private static Node makeSet(String x) { //initialize single node set and mark the representative as itself
         Node node = new Node();
         node.setValue(x);
         node.setParent(node);
-        node.setRank(0);
+        node.setRank(0); //see comments for 'union'
         return node;
     }
 
-    private static Node getRepresentative(Node x) {
+    private static Node getRepresentative(Node x) { //find the representative of x's set
         if (x.getParent().equals(x)) {
             return x;
         } else {
@@ -94,6 +95,12 @@ public class UnionFind {
         }
     }
 
+    /*
+    - Get current representatives for x and y
+    - Compare their rank (1-element trees have a rank of 0, and whenever two trees of the same rank r are merged, the rank of the union is r+1)
+    - Attach the smaller tree to the root of the larger tree
+    - Worst-case running-time O(log n)
+     */
     private static void union(Node x, Node y) {
         Node xRep = getRepresentative(x);
         Node yRep = getRepresentative(y);
@@ -118,6 +125,7 @@ public class UnionFind {
         }
     }
 
+    //convenience struct of a disjoint set member
     private static class Node {
         private String value;
         private Node parent;
