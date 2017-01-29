@@ -1,0 +1,7 @@
+Union Find solution for the following problem
+
+If you were given a series of equations e.g. [A = B, B = D, C = D, F = G, E = H, H = C] and then another series [A != C, D != H, ..., F != A ]
+
+ Check whether the equations combined is valid.
+
+ For the example given, your program should return 'invalid', because the first series implies that A = C, which contradicts the statement A != C in the second series.
